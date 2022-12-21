@@ -1,4 +1,4 @@
-module github.com/natesales/libvirt-sshd
+module github.com/callowaysutton/kubectl-sshd
 
 go 1.15
 

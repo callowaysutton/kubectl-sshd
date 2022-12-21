@@ -1,0 +1,13 @@
+[Unit]
+Description=SSH daemon to interact with kubectl pod serial consoles
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/default/kubectl-sshd
+ExecStart=/usr/bin/kubectl-sshd $LIBVIRT_SSHD_OPTS
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
