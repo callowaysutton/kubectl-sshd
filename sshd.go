@@ -8,11 +8,12 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
+	// "os"
 	"os/exec"
-	"path/filepath"
+	// "path/filepath"
 	"syscall"
 	"unsafe"
+	"strings"
 
 	"github.com/creack/pty"
 	"github.com/gliderlabs/ssh"
@@ -21,11 +22,11 @@ import (
 var release = "dev" // Set by build process
 
 // domain stores a libvirt domain
-type domain struct {
-	XMLName  xml.Name `xml:"domain"`
-	Name     string   `xml:"name"`
-	Password string   `xml:"description"`
-}
+// type domain struct {
+// 	XMLName  xml.Name `xml:"domain"`
+// 	Name     string   `xml:"name"`
+// 	Password string   `xml:"description"`
+// }
 
 // Define flags
 var (
@@ -34,45 +35,75 @@ var (
 	verbose     = flag.Bool("v", false, "Enable verbose logging")
 )
 
+
+func checkPod(s string) bool {
+	// Run the 'kubectl get pods' command to get a list of currently running pods
+	exec.Command("source", "~/.profile")
+	cmd := exec.Command("kubectl", "get", "pods")
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	// Split the output by newline characters to get a slice of strings
+	lines := strings.Split(string(output), "\n")
+
+	// Iterate through the slice of strings and check if 's' is in the list
+	for _, line := range lines {
+		cols := strings.Fields(line)
+		if (cols[0] == s) {
+			return true
+		}
+	}
+
+	// If 's' is not found in the list, return false
+	return false
+}
+
 func handleAuth(ctx ssh.Context, providedPassword string) bool {
 	log.Printf("New connection from %s user %s password %s\n", ctx.RemoteAddr(), ctx.User(), providedPassword)
 
-	files, err := filepath.Glob("/etc/libvirt/qemu/*.xml")
-	if err != nil {
-		log.Fatalf("Unable to parse qemu config file glob: %v\n", err)
-	}
+	return checkPod(ctx.User())
 
-	for _, f := range files {
-		// Read libvirt XML file
-		xmlFile, err := os.Open(f)
-		if err != nil {
-			log.Printf("XML open error: %v\n", err)
-		}
+	// files, err := filepath.Glob("/etc/libvirt/qemu/*.xml")
+	// if err != nil {
+	// 	log.Fatalf("Unable to parse qemu config file glob: %v\n", err)
+	// }
 
-		// Parse libvirt XML file
-		byteValue, _ := ioutil.ReadAll(xmlFile)
-		var currentDomain domain
-		err = xml.Unmarshal(byteValue, &currentDomain)
-		if err != nil {
-			log.Println(err)
-			return false
-		}
-		_ = xmlFile.Close()
+	// for _, f := range files {
+	// 	// Read libvirt XML file
+	// 	xmlFile, err := os.Open(f)
+	// 	if err != nil {
+	// 		log.Printf("XML open error: %v\n", err)
+	// 	}
 
-		if *verbose {
-			fmt.Printf("Found VM %s password %s\n", currentDomain.Name, currentDomain.Password)
-		}
+	// 	// Parse libvirt XML file
+	// 	byteValue, _ := ioutil.ReadAll(xmlFile)
+	// 	var currentDomain domain
+	// 	err = xml.Unmarshal(byteValue, &currentDomain)
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 		return false
+	// 	}
+	// 	_ = xmlFile.Close()
 
-		if currentDomain.Name == ctx.User() && currentDomain.Password == providedPassword {
-			return true // Allow access
-		}
-	}
+	// 	if *verbose {
+	// 		fmt.Printf("Found VM %s password %s\n", currentDomain.Name, currentDomain.Password)
+	// 	}
 
-	return false // If there are no defined VMs, deny access
+	// 	if currentDomain.Name == ctx.User() && currentDomain.Password == providedPassword {
+	// 		return true // Allow access
+	// 	}
+	// }
+
+	// return false // If there are no defined VMs, deny access
 }
 
+
 func handleSession(s ssh.Session) {
-	cmd := exec.Command("virsh", "console", "--safe", s.User())
+	// kubectl exec <container> -it -- /bin/bash
+	cmd := exec.Command("minikube", "kubectl", "--", "exec", s.User(), "-it", "--", "/bin/bash")
 	ptyReq, winCh, isPty := s.Pty() // get SSH PTY information
 	if isPty {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
@@ -85,17 +116,17 @@ func handleSession(s ssh.Session) {
 		go func() { // goroutine to handle
 			_, err := io.Copy(f, s) // stdin
 			if err != nil {
-				log.Printf("virsh f->s copy error: %v\n", err)
+				log.Printf("kubectl f->s copy error: %v\n", err)
 			}
 		}()
 		_, err := io.Copy(s, f) // stdout
 		if err != nil {
-			log.Printf("virsh s->f copy error: %v\n", err)
+			log.Printf("kubectl s->f copy error: %v\n", err)
 		}
 
 		err = cmd.Wait()
 		if err != nil {
-			log.Printf("virsh wait error: %v\n", err)
+			log.Printf("kubectl wait error: %v\n", err)
 		}
 	} else {
 		_, _ = io.WriteString(s, "No PTY requested.\n")
@@ -105,7 +136,7 @@ func handleSession(s ssh.Session) {
 
 func main() {
 	flag.Usage = func() {
-		fmt.Printf("Usage for libvirt-sshd (%s) https://github.com/natesales/libvirt-sshd:\n", release)
+		fmt.Printf("Usage for kubectl-sshd (%s) https://github.com/callowaysutton/kubectl-sshd:\n", release)
 		flag.PrintDefaults()
 	}
 
@@ -127,6 +158,6 @@ func main() {
 		Handler:         handleSession,
 		PasswordHandler: handleAuth,
 	}
-	log.Printf("Starting libvirt-sshd on %s\n", *bindHost)
+	log.Printf("Starting kubectl-sshd on %s\n", *bindHost)
 	log.Fatal(sshServer.ListenAndServe())
 }

@@ -12,10 +12,10 @@ builds:
       - amd64
       - arm64
 scoop:
-  name: libvirt-sshd
+  name: kubectl-sshd
   commit_author:
-    name: natesales
-    email: nate@natesales.net
+    name: callowaysutton
+    email: me@callowaysutton.com
   commit_msg_template: Scoop update for {{ .ProjectName }} version {{ .Tag }}
 checksum:
   name_template: 'checksums.txt'
@@ -29,13 +29,13 @@ changelog:
       - '^test:'
 nfpms:
   - id: nfpm-default
-    package_name: libvirt-sshd
+    package_name: kubectl-sshd
     file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
-    vendor: Nate Sales
-    homepage: https://natesales.net/
-    maintainer: Nate Sales <nate@natesales.net>
-    description: SSH into a libvirt qemu VM serial console
+    vendor: Calloway Sutton
+    homepage: https://callowaysutton.com/
+    maintainer: Calloway Sutton <me@callowaysutton.com>
+    description: SSH into a kubernetes pod serial console, based on libvirt-sshd by Nate Sales
     license: GNU GPL-3.0
     section: utils
     priority: extra

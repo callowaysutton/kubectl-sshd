@@ -1,14 +1,10 @@
-# libvirt-sshd
+# kubectl-sshd
 
-[![Go Report](https://goreportcard.com/badge/github.com/natesales/libvirt-sshd?style=for-the-badge)](https://goreportcard.com/report/github.com/natesales/libvirt-sshd) 
-[![License](https://img.shields.io/github/license/natesales/libvirt-sshd?style=for-the-badge)](hhttps://github.com/natesales/libvirt-sshd/blob/main/LICENSE) 
-[![Release](https://img.shields.io/github/v/release/natesales/libvirt-sshd?style=for-the-badge)](https://github.com/natesales/libvirt-sshd/releases) 
-
-SSH daemon to interact with libvirt domain serial consoles 
+SSH daemon to interact with kubernete pod serial consoles 
 
 ### Installation
 
-This project is available in my public code repositories. See https://github.com/natesales/repo for more info.
+Do not recommend using in a production environment yet. Compile and use the service file.
 
 ### Usage
 
