@@ -9,7 +9,7 @@ Do not recommend using in a production environment yet. Compile and use the serv
 ### Usage
 
 ```
-Usage for libvirt-sshd (dev) https://github.com/natesales/libvirt-sshd:
+Usage for kubectl-sshd (dev) https://github.com/callowaysutton/kubectl-sshd:
   -k string
         SSH host key file (default "~/.ssh/id_ed25519")
   -l string
