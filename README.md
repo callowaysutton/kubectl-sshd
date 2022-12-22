@@ -14,7 +14,7 @@ Usage for kubectl-sshd (dev) https://github.com/callowaysutton/kubectl-sshd:
         SSH host key file (default "~/.ssh/id_ed25519")
   -l string
         Listen <host:port> (default ":2222")
-  -p string
-        Path to virsh binary (default "virsh")
+  -c string
+        Path to kubectl configuration file (default "./config")
   -v    Enable verbose logging
 ```
