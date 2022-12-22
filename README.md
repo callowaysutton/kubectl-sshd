@@ -1,4 +1,5 @@
 # kubectl-sshd
+[![Go Test](https://github.com/callowaysutton/kubectl-sshd/actions/workflows/test.yml/badge.svg)](https://github.com/callowaysutton/kubectl-sshd/actions/workflows/test.yml)
 
 SSH daemon to interact with kubernete pod serial consoles 
 
