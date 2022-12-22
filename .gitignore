@@ -1,5 +1,7 @@
 # Binary
 kubectl-sshd
+config
 
 # JetBrains
 .idea/
+.kube/

@@ -1,16 +1,13 @@
 package main
 
 import (
-	"encoding/xml"
 	"flag"
 	"fmt"
 	gossh "golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"log"
-	// "os"
 	"os/exec"
-	// "path/filepath"
 	"syscall"
 	"unsafe"
 	"strings"
@@ -21,22 +18,18 @@ import (
 
 var release = "dev" // Set by build process
 
-// domain stores a libvirt domain
-// type domain struct {
-// 	XMLName  xml.Name `xml:"domain"`
-// 	Name     string   `xml:"name"`
-// 	Password string   `xml:"description"`
-// }
 
 // Define flags
 var (
 	bindHost    = flag.String("l", ":2222", "Listen <host:port>")
 	hostKeyFile = flag.String("k", "~/.ssh/id_ed25519", "SSH host key file")
+	kubeConfigFile = flag.String("c", "./config", "the kubectl config file, usually located in ~/.kube/config")
 	verbose     = flag.Bool("v", false, "Enable verbose logging")
 )
 
+func handleAuth(ctx ssh.Context, providedPassword string) bool {
+	log.Printf("New connection from %s user %s password %s\n", ctx.RemoteAddr(), ctx.User(), providedPassword)
 
-func checkPod(s string) bool {
 	// Run the 'kubectl get pods' command to get a list of currently running pods
 	exec.Command("source", "~/.profile")
 	cmd := exec.Command("kubectl", "get", "pods")
@@ -52,20 +45,16 @@ func checkPod(s string) bool {
 	// Iterate through the slice of strings and check if 's' is in the list
 	for _, line := range lines {
 		cols := strings.Fields(line)
-		if (cols[0] == s) {
+		if (cols[0] == ctx.User()) {
 			return true
 		}
 	}
 
 	// If 's' is not found in the list, return false
 	return false
-}
 
-func handleAuth(ctx ssh.Context, providedPassword string) bool {
-	log.Printf("New connection from %s user %s password %s\n", ctx.RemoteAddr(), ctx.User(), providedPassword)
-
-	return checkPod(ctx.User())
-
+	// Nate Sales Virsh Edition
+	// ----------------------------
 	// files, err := filepath.Glob("/etc/libvirt/qemu/*.xml")
 	// if err != nil {
 	// 	log.Fatalf("Unable to parse qemu config file glob: %v\n", err)
@@ -103,7 +92,8 @@ func handleAuth(ctx ssh.Context, providedPassword string) bool {
 
 func handleSession(s ssh.Session) {
 	// kubectl exec <container> -it -- /bin/bash
-	cmd := exec.Command("minikube", "kubectl", "--", "exec", s.User(), "-it", "--", "/bin/bash")
+	cmd := exec.Command("kubectl", "exec", s.User(), "-it", "--", "/bin/bash")
+	cmd.Env = append(cmd.Env, fmt.Sprintf("KUBECONFIG=%s", *kubeConfigFile))
 	ptyReq, winCh, isPty := s.Pty() // get SSH PTY information
 	if isPty {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
